@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Jogo de Pong</title>
+<style>
+    body {
+        background-color: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    canvas {
+        background-color: black;
+        border: 2px solid white;
+    }
+</style>
+</head>
+<body>
+<canvas id="pongCanvas" width="800" height="400"></canvas>
+
+<script>
+    // Inicialização do jogo
+    const canvas = document.getElementById('pongCanvas');
+    const ctx = canvas.getContext('2d');
+    const somRaquete = new Audio('somRaquete.mp3');
+    const somPonto = new Audio('somPonto.mp3');
+    const bola = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        raio: 10,
+        dx: 5,
+        dy: 5
+    };
+    const jogador1 = {
+        x: 10,
+        y: canvas.height / 2 - 50,
+        largura: 10,
+        altura: 100,
+        velocidade: 10,
+        direcao: 0
+    };
+    const jogador2 = {
+        x: canvas.width - 20,
+        y: canvas.height / 2 - 50,
+        largura: 10,
+        altura: 100,
+        velocidade: 10,
+        direcao: 0
+    };
+    let pontuacaoJogador1 = 0;
+    let pontuacaoJogador2 = 0;
+    const teclas = {};
+
+    // Desenhar elementos na tela
+    function desenharElementos() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Desenhar bola
+        ctx.beginPath();
+        ctx.arc(bola.x, bola.y, bola.raio, 0, Math.PI * 2);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        ctx.closePath();
+
+        // Desenhar jogadores
+        ctx.fillStyle = 'white';
+        ctx.fillRect(jogador1.x, jogador1.y, jogador1.largura, jogador1.altura);
+        ctx.fillRect(jogador2.x, jogador2.y, jogador2.largura, jogador2.altura);
+
+        // Desenhar placar
+        ctx.fillStyle = 'orange';
+        ctx.font = '48px Arial';
+        ctx.fillText(`${pontuacaoJogador1} - ${pontuacaoJogador2}`, canvas.width / 2 - 60, 50);
+    }
+
+    // Atualizar posição dos elementos
+    function atualizar() {
+        // Movimentar a bola
+        bola.x += bola.dx;
+        bola.y += bola.dy;
+
+        // Verificar colisão com as paredes
+        if (bola.y + bola.dy > canvas.height - bola.raio || bola.y + bola.dy < bola.raio) {
+            bola.dy = -bola.dy;
+        }
+
+        // Verificar colisão com os jogadores
+        if (
+            bola.x - bola.raio < jogador1.x + jogador1.largura &&
+            bola.y > jogador1.y &&
+            bola.y < jogador1.y + jogador1.altura
+        ) {
+            bola.dx = -bola.dx;
+            somRaquete.play();
+        } else if (
+            bola.x + bola.raio > jogador2.x &&
+            bola.y > jogador2.y &&
+            bola.y < jogador2.y + jogador2.altura
+        ) {
+            bola.dx = -bola.dx;
+            somRaquete.play();
+        }
+
+        // Verificar se a bola saiu dos limites laterais
+        if (bola.x + bola.dx > canvas.width - bola.raio) {
+            pontuacaoJogador1++;
+            somPonto.play();
+            reiniciarBola();
+        } else if (bola.x + bola.dx < bola.raio) {
+            pontuacaoJogador2++;
+            somPonto.play();
+            reiniciarBola();
+        }
+
+        // Movimentar jogadores
+        moverJogadores();
+    }
+
+    // Movimentar jogadores com as teclas
+    function moverJogadores() {
+        if (teclas.ArrowUp && jogador2.y > 0) {
+            jogador2.y -= jogador2.velocidade;
+        } else if (teclas.ArrowDown && jogador2.y + jogador2.altura < canvas.height) {
+            jogador2.y += jogador2.velocidade;
+        }
+
+        if (teclas.w && jogador1.y > 0) {
+            jogador1.y -= jogador1.velocidade;
+        } else if (teclas.s && jogador1.y + jogador1.altura < canvas.height) {
+            jogador1.y += jogador1.velocidade;
+        }
+    }
+
+    // Reiniciar a bola no centro da tela
+    function reiniciarBola() {
+        bola.x = canvas.width / 2;
+        bola.y = canvas.height / 2;
+        bola.dx = -bola.dx;
+        bola.dy = Math.random() > 0.5 ? 5 : -5;
+    }
+
+    // Event listeners para teclas
+    document.addEventListener('keydown', (event) => {
+        teclas[event.key] = true;
+    });
+
+    document.addEventListener('keyup', (event) => {
+        delete teclas[event.key];
+    });
+
+    // Loop principal do jogo
+    function loopJogo() {
+        atualizar();
+        desenharElementos();
+        requestAnimationFrame(loopJogo);
+    }
+
+    // Iniciar o jogo
+    loopJogo();
+</script>
+</body>
+</html>
